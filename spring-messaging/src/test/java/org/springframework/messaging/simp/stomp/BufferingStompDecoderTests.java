@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2014 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package org.springframework.messaging.simp.stomp;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,7 +25,9 @@ import org.junit.Test;
 
 import org.springframework.messaging.Message;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * Unit tests for {@link BufferingStompDecoder}.
@@ -40,7 +42,7 @@ public class BufferingStompDecoderTests {
 
 	@Test
 	public void basic() throws InterruptedException {
-		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(128);
+		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(STOMP_DECODER, 128);
 		String chunk = "SEND\na:alpha\n\nMessage body\0";
 
 		List<Message<byte[]>> messages = stompDecoder.decode(toByteBuffer(chunk));
@@ -53,7 +55,7 @@ public class BufferingStompDecoderTests {
 
 	@Test
 	public void oneMessageInTwoChunks() throws InterruptedException {
-		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(128);
+		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(STOMP_DECODER, 128);
 		String chunk1 = "SEND\na:alpha\n\nMessage";
 		String chunk2 = " body\0";
 
@@ -70,7 +72,7 @@ public class BufferingStompDecoderTests {
 
 	@Test
 	public void twoMessagesInOneChunk() throws InterruptedException {
-		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(128);
+		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(STOMP_DECODER, 128);
 		String chunk = "SEND\na:alpha\n\nPayload1\0" + "SEND\na:alpha\n\nPayload2\0";
 		List<Message<byte[]>> messages = stompDecoder.decode(toByteBuffer(chunk));
 
@@ -84,7 +86,7 @@ public class BufferingStompDecoderTests {
 
 	@Test
 	public void oneFullAndOneSplitMessageContentLength() throws InterruptedException {
-		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(128);
+		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(STOMP_DECODER, 128);
 		int contentLength = "Payload2a-Payload2b".getBytes().length;
 		String chunk1 = "SEND\na:alpha\n\nPayload1\0SEND\ncontent-length:" + contentLength + "\n";
 		List<Message<byte[]>> messages = stompDecoder.decode(toByteBuffer(chunk1));
@@ -113,7 +115,7 @@ public class BufferingStompDecoderTests {
 
 	@Test
 	public void oneFullAndOneSplitMessageNoContentLength() throws InterruptedException {
-		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(128);
+		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(STOMP_DECODER, 128);
 		String chunk1 = "SEND\na:alpha\n\nPayload1\0SEND\na:alpha\n";
 		List<Message<byte[]>> messages = stompDecoder.decode(toByteBuffer(chunk1));
 
@@ -141,7 +143,7 @@ public class BufferingStompDecoderTests {
 
 	@Test
 	public void oneFullAndOneSplitWithContentLengthExceedingBufferSize() throws InterruptedException {
-		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(128);
+		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(STOMP_DECODER, 128);
 		String chunk1 = "SEND\na:alpha\n\nPayload1\0SEND\ncontent-length:129\n";
 		List<Message<byte[]>> messages = stompDecoder.decode(toByteBuffer(chunk1));
 
@@ -163,30 +165,47 @@ public class BufferingStompDecoderTests {
 
 	@Test(expected = StompConversionException.class)
 	public void bufferSizeLimit() {
-		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(10);
+		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(STOMP_DECODER, 10);
 		String payload = "SEND\na:alpha\n\nMessage body";
 		stompDecoder.decode(toByteBuffer(payload));
 	}
 
 	@Test
 	public void incompleteCommand() {
-		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(128);
+		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(STOMP_DECODER, 128);
 		String chunk = "MESSAG";
 
 		List<Message<byte[]>> messages = stompDecoder.decode(toByteBuffer(chunk));
 		assertEquals(0, messages.size());
 	}
 
-	@Test(expected = StompConversionException.class)  // SPR-12418
-	public void endingBackslashHeaderValueCheck() {
-		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(128);
+	// SPR-13416
+
+	@Test
+	public void incompleteHeaderWithPartialEscapeSequence() throws Exception {
+		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(STOMP_DECODER, 128);
+		String chunk = "SEND\na:long\\";
+
+		List<Message<byte[]>> messages = stompDecoder.decode(toByteBuffer(chunk));
+		assertEquals(0, messages.size());
+	}
+
+	@Test(expected = StompConversionException.class)
+	public void invalidEscapeSequence() {
+		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(STOMP_DECODER, 128);
+		String payload = "SEND\na:alpha\\x\\n\nMessage body\0";
+		stompDecoder.decode(toByteBuffer(payload));
+	}
+
+	@Test(expected = StompConversionException.class)
+	public void invalidEscapeSequenceWithSingleSlashAtEndOfHeaderValue() {
+		BufferingStompDecoder stompDecoder = new BufferingStompDecoder(STOMP_DECODER, 128);
 		String payload = "SEND\na:alpha\\\n\nMessage body\0";
 		stompDecoder.decode(toByteBuffer(payload));
 	}
 
-
 	private ByteBuffer toByteBuffer(String chunk) {
-		return ByteBuffer.wrap(chunk.getBytes(Charset.forName("UTF-8")));
+		return ByteBuffer.wrap(chunk.getBytes(StandardCharsets.UTF_8));
 	}
 
 }

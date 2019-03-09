@@ -16,18 +16,14 @@
 
 package org.springframework.web.servlet.mvc.condition;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Collection;
 
 import org.junit.Test;
+
 import org.springframework.mock.web.test.MockHttpServletRequest;
-import org.springframework.web.servlet.mvc.condition.HeadersRequestCondition;
 import org.springframework.web.servlet.mvc.condition.HeadersRequestCondition.HeaderExpression;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Arjen Poutsma
@@ -38,7 +34,7 @@ public class HeadersRequestConditionTests {
 	public void headerEquals() {
 		assertEquals(new HeadersRequestCondition("foo"), new HeadersRequestCondition("foo"));
 		assertEquals(new HeadersRequestCondition("foo"), new HeadersRequestCondition("FOO"));
-		assertFalse(new HeadersRequestCondition("foo").equals(new HeadersRequestCondition("bar")));
+		assertNotEquals(new HeadersRequestCondition("foo"), new HeadersRequestCondition("bar"));
 		assertEquals(new HeadersRequestCondition("foo=bar"), new HeadersRequestCondition("foo=bar"));
 		assertEquals(new HeadersRequestCondition("foo=bar"), new HeadersRequestCondition("FOO=bar"));
 	}

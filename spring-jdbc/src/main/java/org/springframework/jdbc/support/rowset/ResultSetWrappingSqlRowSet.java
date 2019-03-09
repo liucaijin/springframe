@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2014 the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ public class ResultSetWrappingSqlRowSet implements SqlRowSet {
 			ResultSetMetaData rsmd = resultSet.getMetaData();
 			if (rsmd != null) {
 				int columnCount = rsmd.getColumnCount();
-				this.columnLabelMap = new HashMap<String, Integer>(columnCount);
+				this.columnLabelMap = new HashMap<>(columnCount);
 				for (int i = 1; i <= columnCount; i++) {
 					String key = rsmd.getColumnLabel(i);
 					// Make sure to preserve first matching column for any given name,
@@ -346,6 +346,27 @@ public class ResultSetWrappingSqlRowSet implements SqlRowSet {
 	}
 
 	/**
+	 * @see java.sql.ResultSet#getNString(int)
+	 */
+	@Override
+	public String getNString(int columnIndex) throws InvalidResultSetAccessException {
+		try {
+			return this.resultSet.getNString(columnIndex);
+		}
+		catch (SQLException se) {
+			throw new InvalidResultSetAccessException(se);
+		}
+	}
+
+	/**
+	 * @see java.sql.ResultSet#getNString(String)
+	 */
+	@Override
+	public String getNString(String columnLabel) throws InvalidResultSetAccessException {
+		return getNString(findColumn(columnLabel));
+	}
+
+	/**
 	 * @see java.sql.ResultSet#getObject(int)
 	 */
 	@Override
@@ -385,6 +406,27 @@ public class ResultSetWrappingSqlRowSet implements SqlRowSet {
 	@Override
 	public Object getObject(String columnLabel, Map<String, Class<?>> map) throws InvalidResultSetAccessException {
 		return getObject(findColumn(columnLabel), map);
+	}
+
+	/**
+	 * @see java.sql.ResultSet#getObject(int, Class)
+	 */
+	@Override
+	public <T> T getObject(int columnIndex, Class<T> type) throws InvalidResultSetAccessException {
+		try {
+			return this.resultSet.getObject(columnIndex, type);
+		}
+		catch (SQLException se) {
+			throw new InvalidResultSetAccessException(se);
+		}
+	}
+
+	/**
+	 * @see java.sql.ResultSet#getObject(String, Class)
+	 */
+	@Override
+	public <T> T getObject(String columnLabel, Class<T> type) throws InvalidResultSetAccessException {
+		return getObject(findColumn(columnLabel), type);
 	}
 
 	/**

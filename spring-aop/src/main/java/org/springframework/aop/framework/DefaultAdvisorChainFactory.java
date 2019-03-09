@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2014 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.springframework.aop.PointcutAdvisor;
 import org.springframework.aop.framework.adapter.AdvisorAdapterRegistry;
 import org.springframework.aop.framework.adapter.GlobalAdvisorAdapterRegistry;
 import org.springframework.aop.support.MethodMatchers;
+import org.springframework.lang.Nullable;
 
 /**
  * A simple but definitive way of working out an advice chain for a Method,
@@ -48,7 +49,7 @@ public class DefaultAdvisorChainFactory implements AdvisorChainFactory, Serializ
 
 	@Override
 	public List<Object> getInterceptorsAndDynamicInterceptionAdvice(
-			Advised config, Method method, Class<?> targetClass) {
+			Advised config, Method method, @Nullable Class<?> targetClass) {
 
 		// This is somewhat tricky... We have to process introductions first,
 		// but we need to preserve order in the ultimate list.
@@ -62,9 +63,9 @@ public class DefaultAdvisorChainFactory implements AdvisorChainFactory, Serializ
 				// Add it conditionally.
 				PointcutAdvisor pointcutAdvisor = (PointcutAdvisor) advisor;
 				if (config.isPreFiltered() || pointcutAdvisor.getPointcut().getClassFilter().matches(actualClass)) {
-					MethodInterceptor[] interceptors = registry.getInterceptors(advisor);
 					MethodMatcher mm = pointcutAdvisor.getPointcut().getMethodMatcher();
 					if (MethodMatchers.matches(mm, method, actualClass, hasIntroductions)) {
+						MethodInterceptor[] interceptors = registry.getInterceptors(advisor);
 						if (mm.isRuntime()) {
 							// Creating a new object instance in the getInterceptors() method
 							// isn't a problem as we normally cache created chains.
@@ -98,8 +99,7 @@ public class DefaultAdvisorChainFactory implements AdvisorChainFactory, Serializ
 	 * Determine whether the Advisors contain matching introductions.
 	 */
 	private static boolean hasMatchingIntroductions(Advised config, Class<?> actualClass) {
-		for (int i = 0; i < config.getAdvisors().length; i++) {
-			Advisor advisor = config.getAdvisors()[i];
+		for (Advisor advisor : config.getAdvisors()) {
 			if (advisor instanceof IntroductionAdvisor) {
 				IntroductionAdvisor ia = (IntroductionAdvisor) advisor;
 				if (ia.getClassFilter().matches(actualClass)) {

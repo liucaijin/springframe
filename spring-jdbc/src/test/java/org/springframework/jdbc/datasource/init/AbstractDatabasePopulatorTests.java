@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2014 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.junit.Test;
+
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -37,11 +38,11 @@ import static org.mockito.Mockito.*;
  */
 public abstract class AbstractDatabasePopulatorTests extends AbstractDatabaseInitializationTests {
 
-	private final ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
+	protected final ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
 
 
 	@Test
-	public void buildWithCommentsAndFailedDrop() throws Exception {
+	public void scriptWithSingleLineCommentsAndFailedDrop() throws Exception {
 		databasePopulator.addScript(resource("db-schema-failed-drop-comments.sql"));
 		databasePopulator.addScript(resource("db-test-data.sql"));
 		databasePopulator.setIgnoreFailedDrops(true);
@@ -50,7 +51,7 @@ public abstract class AbstractDatabasePopulatorTests extends AbstractDatabaseIni
 	}
 
 	@Test
-	public void buildWithNormalEscapedLiteral() throws Exception {
+	public void scriptWithStandardEscapedLiteral() throws Exception {
 		databasePopulator.addScript(defaultSchema());
 		databasePopulator.addScript(resource("db-test-data-escaped-literal.sql"));
 		DatabasePopulatorUtils.execute(databasePopulator, db);
@@ -58,7 +59,7 @@ public abstract class AbstractDatabasePopulatorTests extends AbstractDatabaseIni
 	}
 
 	@Test
-	public void buildWithMySQLEscapedLiteral() throws Exception {
+	public void scriptWithMySqlEscapedLiteral() throws Exception {
 		databasePopulator.addScript(defaultSchema());
 		databasePopulator.addScript(resource("db-test-data-mysql-escaped-literal.sql"));
 		DatabasePopulatorUtils.execute(databasePopulator, db);
@@ -66,7 +67,7 @@ public abstract class AbstractDatabasePopulatorTests extends AbstractDatabaseIni
 	}
 
 	@Test
-	public void buildWithMultipleStatements() throws Exception {
+	public void scriptWithMultipleStatements() throws Exception {
 		databasePopulator.addScript(defaultSchema());
 		databasePopulator.addScript(resource("db-test-data-multiple.sql"));
 		DatabasePopulatorUtils.execute(databasePopulator, db);
@@ -77,7 +78,7 @@ public abstract class AbstractDatabasePopulatorTests extends AbstractDatabaseIni
 	}
 
 	@Test
-	public void buildWithMultipleStatementsLongSeparator() throws Exception {
+	public void scriptWithMultipleStatementsAndLongSeparator() throws Exception {
 		databasePopulator.addScript(defaultSchema());
 		databasePopulator.addScript(resource("db-test-data-endings.sql"));
 		databasePopulator.setSeparator("@@");
@@ -89,7 +90,7 @@ public abstract class AbstractDatabasePopulatorTests extends AbstractDatabaseIni
 	}
 
 	@Test
-	public void buildWithMultipleStatementsWhitespaceSeparator() throws Exception {
+	public void scriptWithMultipleStatementsAndWhitespaceSeparator() throws Exception {
 		databasePopulator.addScript(defaultSchema());
 		databasePopulator.addScript(resource("db-test-data-whitespace.sql"));
 		databasePopulator.setSeparator("/\n");
@@ -101,7 +102,7 @@ public abstract class AbstractDatabasePopulatorTests extends AbstractDatabaseIni
 	}
 
 	@Test
-	public void buildWithMultipleStatementsNewlineSeparator() throws Exception {
+	public void scriptWithMultipleStatementsAndNewlineSeparator() throws Exception {
 		databasePopulator.addScript(defaultSchema());
 		databasePopulator.addScript(resource("db-test-data-newline.sql"));
 		DatabasePopulatorUtils.execute(databasePopulator, db);
@@ -112,7 +113,7 @@ public abstract class AbstractDatabasePopulatorTests extends AbstractDatabaseIni
 	}
 
 	@Test
-	public void buildWithMultipleStatementsMultipleNewlineSeparator() throws Exception {
+	public void scriptWithMultipleStatementsAndMultipleNewlineSeparator() throws Exception {
 		databasePopulator.addScript(defaultSchema());
 		databasePopulator.addScript(resource("db-test-data-multi-newline.sql"));
 		databasePopulator.setSeparator("\n\n");
@@ -144,7 +145,7 @@ public abstract class AbstractDatabasePopulatorTests extends AbstractDatabaseIni
 		databasePopulator.setSeparator(ScriptUtils.EOF_STATEMENT_SEPARATOR);
 		databasePopulator.addScript(resource("drop-users-schema.sql"));
 		databasePopulator.addScript(resource("users-schema-without-separator.sql"));
-		databasePopulator.addScript(resource("users-data.sql"));
+		databasePopulator.addScript(resource("users-data-without-separator.sql"));
 		DatabasePopulatorUtils.execute(databasePopulator, db);
 
 		assertUsersDatabaseCreated("Brannen");
@@ -159,7 +160,7 @@ public abstract class AbstractDatabasePopulatorTests extends AbstractDatabaseIni
 	}
 
 	@Test
-	public void buildWithSelectStatements() throws Exception {
+	public void scriptWithSelectStatements() throws Exception {
 		databasePopulator.addScript(defaultSchema());
 		databasePopulator.addScript(resource("db-test-data-select.sql"));
 		DatabasePopulatorUtils.execute(databasePopulator, db);

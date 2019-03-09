@@ -52,13 +52,26 @@ public class GenericMessage<T> implements Message<T>, Serializable {
 
 	/**
 	 * Create a new message with the given payload and headers.
+	 * The content of the given header map is copied.
+	 * @param payload the message payload (never {@code null})
+	 * @param headers message headers to use for initialization
+	 */
+	public GenericMessage(T payload, Map<String, Object> headers) {
+		this(payload, new MessageHeaders(headers));
+	}
+
+	/**
+	 * A constructor with the {@link MessageHeaders} instance to use.
+	 * <p><strong>Note:</strong> the given {@code MessageHeaders} instance is used
+	 * directly in the new message, i.e. it is not copied.
 	 * @param payload the message payload (never {@code null})
 	 * @param headers message headers
 	 */
-	public GenericMessage(T payload, Map<String, Object> headers) {
+	public GenericMessage(T payload, MessageHeaders headers) {
 		Assert.notNull(payload, "Payload must not be null");
-		this.headers = new MessageHeaders(headers);
+		Assert.notNull(headers, "MessageHeaders must not be null");
 		this.payload = payload;
+		this.headers = headers;
 	}
 
 
@@ -89,15 +102,15 @@ public class GenericMessage<T> implements Message<T>, Serializable {
 	}
 
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
+		StringBuilder sb = new StringBuilder(getClass().getSimpleName());
+		sb.append(" [payload=");
 		if (this.payload instanceof byte[]) {
-			sb.append("[Payload byte[").append(((byte[]) this.payload).length).append("]]");
+			sb.append("byte[").append(((byte[]) this.payload).length).append("]");
 		}
 		else {
-			sb.append("[Payload ").append(this.payload.getClass().getSimpleName());
-			sb.append(" content=").append(this.payload).append("]");
+			sb.append(this.payload);
 		}
-		sb.append("[Headers=").append(this.headers).append("]");
+		sb.append(", headers=").append(this.headers).append("]");
 		return sb.toString();
 	}
 

@@ -18,6 +18,7 @@ package org.springframework.context.groovy;
 
 import org.junit.Test;
 
+import org.springframework.beans.factory.parsing.BeanDefinitionParsingException;
 import org.springframework.context.support.GenericGroovyApplicationContext;
 
 import static org.junit.Assert.*;
@@ -66,6 +67,11 @@ public class GroovyApplicationContextTests {
 		Object company = ctx.getBean("company");
 		assertNotNull("could not find company bean", company);
 		assertEquals("SpringSource", company);
+	}
+
+	@Test(expected = BeanDefinitionParsingException.class)
+	public void testConfigFileParsingError() {
+		new GenericGroovyApplicationContext("org/springframework/context/groovy/applicationContext-error.groovy");
 	}
 
 }

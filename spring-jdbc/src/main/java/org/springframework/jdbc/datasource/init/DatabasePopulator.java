@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2014 the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import java.sql.SQLException;
  * @see DatabasePopulatorUtils
  * @see DataSourceInitializer
  */
+@FunctionalInterface
 public interface DatabasePopulator {
 
 	/**
@@ -40,7 +41,7 @@ public interface DatabasePopulator {
 	 * {@link ResourceDatabasePopulator} and {@link DatabasePopulatorUtils} wrap
 	 * all {@code SQLExceptions} in {@code ScriptExceptions}.
 	 * @param connection the JDBC connection to use to populate the db; already
-	 * configured and ready to use
+	 * configured and ready to use; never {@code null}
 	 * @throws SQLException if an unrecoverable data access exception occurs
 	 * during database population
 	 * @throws ScriptException in all other error cases

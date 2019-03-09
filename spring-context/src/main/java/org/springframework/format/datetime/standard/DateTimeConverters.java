@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
-import java.time.chrono.ChronoZonedDateTime;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -128,7 +127,6 @@ final class DateTimeConverters {
 		}
 	}
 
-
 	private static class ZonedDateTimeToOffsetDateTimeConverter implements Converter<ZonedDateTime, OffsetDateTime> {
 
 		@Override
@@ -142,10 +140,10 @@ final class DateTimeConverters {
 
 		@Override
 		public Instant convert(ZonedDateTime source) {
-			// Explicit cast to interface necessary in order to call Java 8 default method from -source 1.6
-			return ((ChronoZonedDateTime) source).toInstant();
+			return source.toInstant();
 		}
 	}
+
 
 	private static class OffsetDateTimeToLocalDateConverter implements Converter<OffsetDateTime, LocalDate> {
 
@@ -241,8 +239,7 @@ final class DateTimeConverters {
 
 		@Override
 		public Instant convert(Calendar source) {
-			// Explicit cast to interface necessary in order to call Java 8 default method from -source 1.6
-			return ((ChronoZonedDateTime) calendarToZonedDateTime(source)).toInstant();
+			return calendarToZonedDateTime(source).toInstant();
 		}
 	}
 
